@@ -17,6 +17,12 @@ models/
 temp.wav
 output.wav
 
+# Compiled binaries / downloaded executables
+*.exe
+
+# Claude Code session state (permissions are machine/session-specific)
+.claude/settings.local.json
+
 # OS cruft
 Thumbs.db
 desktop.ini

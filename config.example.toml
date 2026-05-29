@@ -1,0 +1,18 @@
+[service]
+host = "127.0.0.1"
+port = 7788
+auth_token = ""           # optional shared token; if set, clients must send X-Cyclops-Token
+
+[voice]
+model_path = "models/en_US-ryan-medium.onnx"
+length_scale = 1.15       # >1 = slower / more deliberate
+pitch_semitones = -1
+preset = "game-accurate"  # game-accurate | subtle | heavy
+
+[hotkeys]
+read_selection = "ctrl+alt+r"
+stop = "ctrl+alt+s"
+
+[audio]
+output_device = ""        # empty = system default
+sample_rate = 0           # 0 = use model rate
