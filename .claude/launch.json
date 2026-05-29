@@ -13,5 +13,11 @@
       "runtimeArgs": ["-m", "cyclops_voice.cli", "daemon", "--no-hotkey", "--no-tray"],
       "port": 7788
     }
+  ,{
+      "name": "tuning-preview",
+      "runtimeExecutable": ".venv/Scripts/python",
+      "runtimeArgs": ["-m", "http.server", "7790", "--directory", "tuning/preview"],
+      "port": 7790
+    }
   ]
 }
