@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Voice models (large; downloaded via scripts/install_voice_model.py)
+models/
+*.onnx
+*.onnx.json
+
+# Generated / temp audio
+*.wav
+temp.wav
+output.wav
+
+# OS cruft
+Thumbs.db
+desktop.ini
+.DS_Store
