@@ -20,6 +20,7 @@ class Preset:
     reverb_width: float
     chorus_mix: float = 0.0
     drive_db: float = 0.0
+    bitcrush_bit_depth: float = 0.0  # 0 = disabled; 8-16 = subtle digital grain
 
 
 PRESETS: dict[str, Preset] = {

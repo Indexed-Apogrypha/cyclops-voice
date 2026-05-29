@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 from pedalboard import (
     Pedalboard, HighpassFilter, LowpassFilter, PeakFilter,
-    Compressor, Reverb, Chorus, Distortion, Gain, PitchShift,
+    Compressor, Reverb, Chorus, Distortion, Gain, PitchShift, Bitcrush,
 )
 from .config import Preset
 
@@ -26,6 +26,8 @@ def build_board(preset: Preset, pitch_semitones: float = 0.0) -> Pedalboard:
     ]
     if preset.drive_db > 0:
         plugins.append(Distortion(drive_db=preset.drive_db))
+    if preset.bitcrush_bit_depth > 0:
+        plugins.append(Bitcrush(bit_depth=preset.bitcrush_bit_depth))
     if preset.chorus_mix > 0:
         plugins.append(Chorus(rate_hz=0.6, depth=0.25, centre_delay_ms=8.0,
                               feedback=0.0, mix=preset.chorus_mix))
