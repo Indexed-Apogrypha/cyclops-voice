@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cyclops-daemon",
+      "runtimeExecutable": ".venv/Scripts/python",
+      "runtimeArgs": ["-m", "cyclops_voice.cli", "daemon"],
+      "port": 7788
+    },
+    {
+      "name": "cyclops-api",
+      "runtimeExecutable": ".venv/Scripts/python",
+      "runtimeArgs": ["-m", "cyclops_voice.cli", "daemon", "--no-hotkey", "--no-tray"],
+      "port": 7788
+    }
+  ]
+}
