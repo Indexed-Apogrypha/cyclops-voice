@@ -25,8 +25,8 @@ class Preset:
 PRESETS: dict[str, Preset] = {
     # Derived from the measured reference profile (see design spec §2-3).
     "game-accurate": Preset(
-        name="game-accurate", highpass_hz=60, lowmid_freq_hz=200, lowmid_gain_db=6.0,
-        lowmid_q=0.7, lowpass_hz=3200, comp_threshold_db=-18, comp_ratio=2.5,
+        name="game-accurate", highpass_hz=60, lowmid_freq_hz=200, lowmid_gain_db=8.0,
+        lowmid_q=1.2, lowpass_hz=3200, comp_threshold_db=-18, comp_ratio=2.5,
         reverb_room_size=0.55, reverb_damping=0.5, reverb_wet=0.28, reverb_width=1.0,
     ),
     "subtle": Preset(
