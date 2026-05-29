@@ -23,7 +23,18 @@ output.wav
 # Claude Code session state (permissions are machine/session-specific)
 .claude/settings.local.json
 
+# Local-only working notes (not shared with the team)
+CLAUDE.md
+MEMORY.md
+
 # OS cruft
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# API keys
+*.env
+
+# Tuning: generated audio renders + large embedded-audio preview (reproducible via tuning/render_matrix.py + build_preview.py)
+tuning/renders/
+tuning/preview/
