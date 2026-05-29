@@ -1,0 +1,25 @@
+[
+  {
+    "candidate_id": "E1_tuned_v3",
+    "model_path": "models/en_US-ryan-medium.onnx",
+    "length_scale": 1.22,
+    "pitch_semitones": -2.0,
+    "preset": {
+      "name": "game-accurate",
+      "highpass_hz": 60,
+      "lowmid_freq_hz": 200,
+      "lowmid_gain_db": 8.0,
+      "lowmid_q": 1.2,
+      "lowpass_hz": 3200,
+      "comp_threshold_db": -18,
+      "comp_ratio": 2.5,
+      "reverb_room_size": 0.42,
+      "reverb_damping": 0.65,
+      "reverb_wet": 0.24,
+      "reverb_width": 1.0,
+      "chorus_mix": 0.0,
+      "drive_db": 2.0,
+      "bitcrush_bit_depth": 12.0
+    }
+  }
+]
