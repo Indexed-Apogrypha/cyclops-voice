@@ -21,3 +21,11 @@ def test_long_sentence_is_split_by_length():
 def test_newlines_break_chunks():
     out = chunk_text("Line one\nLine two")
     assert out == ["Line one", "Line two"]
+
+
+def test_single_long_word_is_split():
+    long_word = "x" * 500
+    out = chunk_text(long_word, max_chars=240)
+    assert len(out) >= 2
+    assert all(len(c) <= 240 for c in out)
+    assert "".join(out) == long_word

@@ -8,6 +8,14 @@ def _split_long(piece: str, max_chars: int) -> list[str]:
     words = piece.split(" ")
     out, cur = [], ""
     for w in words:
+        # If the word itself exceeds max_chars, split it by characters
+        if len(w) > max_chars:
+            if cur:
+                out.append(cur)
+                cur = ""
+            for i in range(0, len(w), max_chars):
+                out.append(w[i:i + max_chars])
+            continue
         cand = w if not cur else cur + " " + w
         if len(cand) > max_chars and cur:
             out.append(cur)
