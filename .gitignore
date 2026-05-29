@@ -20,6 +20,10 @@ output.wav
 # Compiled binaries / downloaded executables
 *.exe
 
+# PyInstaller build artifacts
+build/
+dist/
+
 # Claude Code session state (permissions are machine/session-specific)
 .claude/settings.local.json
 

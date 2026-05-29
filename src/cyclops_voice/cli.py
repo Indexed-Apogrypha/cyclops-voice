@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
                    enable_tray=not args.no_tray)
         return 0
     if args.cmd == "install-model":
-        from scripts.install_voice_model import main as m; return m()
+        from .model_download import main as m; return m()
     if args.cmd == "install-autostart":
         from scripts.install_autostart import main as m; return m()
 
