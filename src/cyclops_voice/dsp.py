@@ -42,12 +42,35 @@ def build_board(preset: Preset, pitch_semitones: float = 0.0) -> Pedalboard:
 
 def apply_dsp(mono: np.ndarray, sample_rate: int, preset: Preset,
               pitch_semitones: float = 0.0) -> np.ndarray:
-    """Mono float32 -> stereo (N,2) float32 through the Cyclops chain."""
+    """Mono float32 -> stereo (N,2) float32 through the Cyclops chain.
+
+    When the preset enables them, a WORLD pitch-quantize stage and an envelope-gated
+    rasp run on the mono signal first, and a PA presence peak runs on the stereo
+    output last. These are lazy-loaded so plain presets stay zero-overhead.
+    """
+    mono = np.asarray(mono, dtype=np.float32).reshape(-1)
+    board_pitch = pitch_semitones
+    if preset.pitch_quantize and mono.size:
+        from .pitch_quantize import quantize_pitch
+        mono = quantize_pitch(mono, sample_rate, snap_strength=preset.quant_snap,
+                              transpose_semitones=preset.quant_transpose,
+                              formant_alpha=preset.formant_alpha)
+        board_pitch = 0.0  # WORLD already set the register; don't double-shift
+    if preset.rasp_amount > 0 and mono.size:
+        from .texture import add_rasp
+        mono = add_rasp(mono, sample_rate, amount=preset.rasp_amount)
+
     stereo = to_stereo(mono)                      # (N, 2)
-    board = build_board(preset, pitch_semitones)
+    board = build_board(preset, board_pitch)
     # pedalboard expects (num_channels, num_samples): transpose in/out.
     processed = board(stereo.T, sample_rate)      # (2, N)
     out = np.ascontiguousarray(processed.T, dtype=np.float32)  # (N, 2)
+
+    if preset.presence_gain_db and out.size:
+        from .texture import presence_eq
+        out = presence_eq(out, sample_rate, freq_hz=preset.presence_freq_hz,
+                          gain_db=preset.presence_gain_db, q=preset.presence_q)
+
     peak = float(np.max(np.abs(out))) if out.size else 0.0
     if peak > 0.99:
         out = (out / peak * 0.97).astype(np.float32)  # guard against clipping
