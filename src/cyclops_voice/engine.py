@@ -24,7 +24,6 @@ class SpeechEngine:
         self._player = Player(self.sample_rate, self._sink)
         self._lock = threading.Lock()
         self._current_text: str | None = None
-        self._gen_thread: threading.Thread | None = None
 
     def speak(self, text: str, preset: str | None = None,
               mode: str = "interrupt") -> str:
