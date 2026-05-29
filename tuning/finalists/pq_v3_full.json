@@ -1,0 +1,23 @@
+{
+  "wav": "tuning\\renders\\pq_v3_full\\combined.wav",
+  "label": "pq_v3_full",
+  "scores": {
+    "timbre_identity": 19,
+    "cadence": 20,
+    "prosodic_contour": 14,
+    "procedural_authority": 15,
+    "diction_clarity": 10,
+    "synthetic_character": 9,
+    "emotional_calibration": 10
+  },
+  "total": 97,
+  "defects": [
+    "Very minor lack of distinct metallic resonance in timbre"
+  ],
+  "strengths": [
+    "Exceptional cadence and pacing",
+    "Strong procedural authority",
+    "Clear and highly intelligible diction"
+  ],
+  "model_notes": "The base voice quality is exceptionally close to the Cyclops AI, demonstrating excellent control over character, pacing, and operational delivery."
+}

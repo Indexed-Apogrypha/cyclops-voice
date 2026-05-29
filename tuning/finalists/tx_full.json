@@ -1,0 +1,23 @@
+{
+  "wav": "tuning\\renders\\tx_full\\combined.wav",
+  "label": "tx_full",
+  "scores": {
+    "timbre_identity": 17,
+    "cadence": 19,
+    "prosodic_contour": 14,
+    "procedural_authority": 15,
+    "diction_clarity": 10,
+    "synthetic_character": 9,
+    "emotional_calibration": 10
+  },
+  "total": 94,
+  "defects": [
+    "Slightly less pronounced vocal rasp"
+  ],
+  "strengths": [
+    "Strong procedural authority",
+    "Excellent diction & clarity",
+    "Believable ship AI character"
+  ],
+  "model_notes": "The base voice quality is a deep, mature male voice with a clear, resonant delivery, highly suitable for an onboard AI."
+}

@@ -1,87 +1,88 @@
-"""Generate tuning/preview/index.html with base64-embedded E1, B1, E1_tuned audio."""
+"""Generate tuning/preview/index.html with base64-embedded finalist audio.
+
+Phase 4 finalists for the user >95 listening gate. The Gemini judge is noisy
+(+/-10 run-to-run), so these cards show one representative full-rubric reading;
+the authoritative decision is the user's ears.
+"""
 from __future__ import annotations
 import base64, pathlib
 
 ROOT = pathlib.Path(__file__).parent.parent
 
+
+def _rubric(s: dict) -> list:
+    def cls(v, mx): return "perfect" if v >= mx else ("near" if v >= mx * 0.8 else "warn")
+    return [
+        ("Timbre Identity",  f"{s['timbre_identity']}/20",      cls(s["timbre_identity"], 20)),
+        ("Cadence",          f"{s['cadence']}/20",              cls(s["cadence"], 20)),
+        ("Prosodic Contour", f"{s['prosodic_contour']}/15",     cls(s["prosodic_contour"], 15)),
+        ("Authority",        f"{s['procedural_authority']}/15", cls(s["procedural_authority"], 15)),
+        ("Diction",          f"{s['diction_clarity']}/10",      cls(s["diction_clarity"], 10)),
+        ("Synthetic Char.",  f"{s['synthetic_character']}/10",  cls(s["synthetic_character"], 10)),
+        ("Emotion",          f"{s['emotional_calibration']}/10", cls(s["emotional_calibration"], 10)),
+    ]
+
+
 CANDIDATES = [
     {
-        "id": "c8",
-        "label": "crush_8bit",
-        "title": "8-BIT",
-        "score": 91,
-        "accent": "#00c8ff",
-        "bg_rgba": "rgba(0,200,255,.12)",
+        "id": "before",
+        "label": "E1_tuned_v3 (before)",
+        "title": "BEFORE · NO QUANTIZATION",
+        "score": 88,
+        "accent": "#7a8a96",
+        "bg_rgba": "rgba(122,138,150,.12)",
         "params": [
-            ("PITCH",  "&minus;2 semitones"),
+            ("PITCH",  "&minus;2 semitones (DSP PitchShift)"),
             ("LENGTH", "1.22 &mdash; extended pauses"),
             ("DRIVE",  "2 dB saturation"),
-            ("CRUSH",  "8-bit"),
-            ("ROOM",   "0.42 / damp 0.65 / wet 0.24"),
+            ("CRUSH",  "12-bit"),
+            ("PITCH Q", "none &mdash; natural Piper contour"),
         ],
-        "defect": "Slightly less pronounced vocal grain/rasp than official",
-        "rubric": [
-            ("Timbre Identity", "17/20", "near"),
-            ("Cadence",         "18/20", "near"),
-            ("Prosodic Contour","14/15", "near"),
-            ("Authority",       "14/15", "near"),
-            ("Diction",         "10/10", "perfect"),
-            ("Synthetic Char.", "9/10",  "near"),
-            ("Emotion",         "9/10",  "near"),
-        ],
-        "wav": ROOT / "tuning/renders/crush_8bit/combined.wav",
+        "defect": "Synthetic character leans modern/clean; rasp & PA quality don't match",
+        "rubric": _rubric({"timbre_identity": 15, "cadence": 19, "prosodic_contour": 14,
+                           "procedural_authority": 14, "diction_clarity": 10,
+                           "synthetic_character": 7, "emotional_calibration": 9}),
+        "wav": ROOT / "tuning/renders/E1_tuned_v3/combined.wav",
     },
     {
-        "id": "c7",
-        "label": "crush_7bit",
-        "title": "7-BIT",
+        "id": "pqfull",
+        "label": "pq_v3_full  ★ RECOMMENDED",
+        "title": "PITCH QUANTIZED",
         "score": 97,
         "accent": "#00ff9d",
         "bg_rgba": "rgba(0,255,157,.12)",
         "params": [
-            ("PITCH",  "&minus;2 semitones"),
+            ("PITCH",  "WORLD &mdash; hard chromatic snap"),
+            ("XPOSE",  "&minus;2 semitones (folded into F0)"),
             ("LENGTH", "1.22 &mdash; extended pauses"),
-            ("DRIVE",  "2 dB saturation"),
-            ("CRUSH",  "7-bit"),
-            ("ROOM",   "0.42 / damp 0.65 / wet 0.24"),
+            ("DRIVE",  "2 dB / 12-bit crush"),
+            ("FORMANT","unshifted (1.00)"),
         ],
-        "defect": "Subtle vocal grain/crackle occasionally slightly more pronounced than ideal",
-        "rubric": [
-            ("Timbre Identity", "18/20", "near"),
-            ("Cadence",         "20/20", "perfect"),
-            ("Prosodic Contour","15/15", "perfect"),
-            ("Authority",       "15/15", "perfect"),
-            ("Diction",         "10/10", "perfect"),
-            ("Synthetic Char.", "9/10",  "near"),
-            ("Emotion",         "10/10", "perfect"),
-        ],
-        "wav": ROOT / "tuning/renders/crush_7bit/combined.wav",
+        "defect": "Very minor lack of distinct metallic resonance",
+        "rubric": _rubric({"timbre_identity": 19, "cadence": 20, "prosodic_contour": 14,
+                           "procedural_authority": 15, "diction_clarity": 10,
+                           "synthetic_character": 9, "emotional_calibration": 10}),
+        "wav": ROOT / "tuning/renders/pq_v3_full/combined.wav",
     },
     {
-        "id": "c6",
-        "label": "crush_6bit",
-        "title": "6-BIT",
-        "score": 76,
-        "accent": "#ff6b35",
-        "bg_rgba": "rgba(255,107,53,.12)",
+        "id": "txfull",
+        "label": "tx_full (quantized + texture)",
+        "title": "QUANTIZED + GRAIN + PA",
+        "score": 94,
+        "accent": "#00c8ff",
+        "bg_rgba": "rgba(0,200,255,.12)",
         "params": [
-            ("PITCH",  "&minus;2 semitones"),
-            ("LENGTH", "1.22 &mdash; extended pauses"),
-            ("DRIVE",  "2 dB saturation"),
-            ("CRUSH",  "6-bit &mdash; too heavy"),
-            ("ROOM",   "0.42 / damp 0.65 / wet 0.24"),
+            ("PITCH",  "WORLD &mdash; hard chromatic snap"),
+            ("RASP",   "0.10 envelope-gated grain"),
+            ("DRIVE",  "4 dB / 11-bit crush"),
+            ("BAND",   "highpass 120 Hz"),
+            ("PRESENCE","+3 dB @ 2.3 kHz"),
         ],
-        "defect": "Too crushed &mdash; loses chest resonance, warmth, and Cyclops identity",
-        "rubric": [
-            ("Timbre Identity", "10/20", "warn"),
-            ("Cadence",         "17/20", "near"),
-            ("Prosodic Contour","12/15", "near"),
-            ("Authority",       "14/15", "near"),
-            ("Diction",         "10/10", "perfect"),
-            ("Synthetic Char.", "7/10",  "warn"),
-            ("Emotion",         "6/10",  "warn"),
-        ],
-        "wav": ROOT / "tuning/renders/crush_6bit/combined.wav",
+        "defect": "Texture added but does not reliably beat pure quantization under the judge",
+        "rubric": _rubric({"timbre_identity": 17, "cadence": 19, "prosodic_contour": 14,
+                           "procedural_authority": 15, "diction_clarity": 10,
+                           "synthetic_character": 9, "emotional_calibration": 10}),
+        "wav": ROOT / "tuning/renders/tx_full/combined.wav",
     },
 ]
 
@@ -207,17 +208,17 @@ def build():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyclops Voice &mdash; Phase 2 Candidates</title>
+<title>Cyclops Voice &mdash; Phase 4 Finalists</title>
 <style>{CSS}</style>
 </head>
 <body>
 <header>
   <div class="logo">Cyclops Voice &mdash; Tuning Console</div>
-  <h1>PHASE 2 CANDIDATES</h1>
-  <div class="subtitle">Evaluation script &bull; 5 lines &bull; stereo 22.05&nbsp;kHz</div>
+  <h1>PHASE 4 FINALISTS</h1>
+  <div class="subtitle">Pitch-quantization bake-off &bull; 5 lines &bull; stereo 22.05&nbsp;kHz &bull; Gemini noisy &plusmn;10 &mdash; trust your ears</div>
 </header>
 <div class="cards">{cards}</div>
-<footer>CYCLOPS ONBOARD AI &bull; TUNING SYSTEM v2 &bull; PHASE 2</footer>
+<footer>CYCLOPS ONBOARD AI &bull; TUNING SYSTEM v2 &bull; PHASE 4 &mdash; USER GATE</footer>
 <script>{JS}</script>
 </body>
 </html>"""

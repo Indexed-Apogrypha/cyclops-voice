@@ -1,0 +1,25 @@
+{
+  "wav": "tuning\\renders\\tx_rasp_med\\combined.wav",
+  "label": "tx_rasp_med",
+  "scores": {
+    "timbre_identity": 12,
+    "cadence": 19,
+    "prosodic_contour": 14,
+    "procedural_authority": 14,
+    "diction_clarity": 10,
+    "synthetic_character": 7,
+    "emotional_calibration": 9
+  },
+  "total": 85,
+  "defects": [
+    "Too clean timbre, lacks mild roughness/grain",
+    "Subtle rasp and modulation artifacts are absent",
+    "Synthetic character is too polished, not 'PA/intercom'"
+  ],
+  "strengths": [
+    "Excellent deliberate pacing and cadence",
+    "Crystal clear diction and intelligibility",
+    "Strong sense of calm, procedural authority"
+  ],
+  "model_notes": "The base voice quality is a very competent, clear, deep-voiced AI, but it is too polished and clean to perfectly match the Cyclops's distinct, slightly worn character."
+}
