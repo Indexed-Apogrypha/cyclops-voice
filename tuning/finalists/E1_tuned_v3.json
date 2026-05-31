@@ -1,0 +1,26 @@
+{
+  "wav": "tuning\\renders\\E1_tuned_v3\\combined.wav",
+  "label": "E1_tuned_v3",
+  "scores": {
+    "timbre_identity": 15,
+    "cadence": 19,
+    "prosodic_contour": 14,
+    "procedural_authority": 14,
+    "diction_clarity": 10,
+    "synthetic_character": 7,
+    "emotional_calibration": 9
+  },
+  "total": 88,
+  "defects": [
+    "Timbre slightly less dark and dense than reference.",
+    "Specific character of roughness/rasp does not fully match Cyclops.",
+    "Synthetic character feels too modern/clean, lacking older PA quality.",
+    "Modulation artifacts less prominent than reference."
+  ],
+  "strengths": [
+    "Excellent cadence and deliberate pacing.",
+    "Strong sense of calm procedural authority.",
+    "Outstanding diction and clarity."
+  ],
+  "model_notes": "The base voice quality is deep and clear with a present, but distinct, synthetic character that leans towards modern AI."
+}

@@ -20,6 +20,17 @@ class Preset:
     reverb_width: float
     chorus_mix: float = 0.0
     drive_db: float = 0.0
+    bitcrush_bit_depth: float = 0.0  # 0 = disabled; 8-16 = subtle digital grain
+    # --- WORLD hard pitch quantization (the "autotuned" Cyclops movement) ---
+    pitch_quantize: bool = False     # when True, F0 is snapped in apply_dsp (DSP PitchShift skipped)
+    quant_snap: float = 1.0          # 0..1 blend toward the 12-TET grid (1.0 = full)
+    quant_transpose: float = 0.0     # semitones to drop/raise register before snapping
+    formant_alpha: float = 1.0       # spectral-envelope warp; >1 = upward formant shift
+    # --- texture: envelope-gated rasp grain + PA presence peak ---
+    rasp_amount: float = 0.0         # 0 = off; 0.05-0.18 = grain level
+    presence_freq_hz: float = 2200.0
+    presence_gain_db: float = 0.0    # 0 = off
+    presence_q: float = 1.0
 
 
 PRESETS: dict[str, Preset] = {
@@ -28,6 +39,17 @@ PRESETS: dict[str, Preset] = {
         name="game-accurate", highpass_hz=60, lowmid_freq_hz=200, lowmid_gain_db=8.0,
         lowmid_q=1.2, lowpass_hz=3200, comp_threshold_db=-18, comp_ratio=2.5,
         reverb_room_size=0.55, reverb_damping=0.5, reverb_wet=0.28, reverb_width=1.0,
+    ),
+    # Winning tuned candidate (tx_full): WORLD hard pitch quantization + envelope-gated
+    # rasp grain + PA presence, on the E1_tuned_v3 DSP base. See docs/superpowers/ &
+    # tuning/. Use with length_scale 1.22 and pitch_semitones 0 (WORLD handles pitch).
+    "game-accurate-v2": Preset(
+        name="game-accurate-v2", highpass_hz=120, lowmid_freq_hz=200, lowmid_gain_db=8.0,
+        lowmid_q=1.2, lowpass_hz=3200, comp_threshold_db=-18, comp_ratio=2.5,
+        reverb_room_size=0.42, reverb_damping=0.65, reverb_wet=0.24, reverb_width=1.0,
+        drive_db=4.0, bitcrush_bit_depth=11.0,
+        pitch_quantize=True, quant_snap=1.0, quant_transpose=-2.0, formant_alpha=1.0,
+        rasp_amount=0.10, presence_freq_hz=2300.0, presence_gain_db=3.0, presence_q=1.0,
     ),
     "subtle": Preset(
         name="subtle", highpass_hz=70, lowmid_freq_hz=180, lowmid_gain_db=3.0,
@@ -53,9 +75,9 @@ class ServiceConfig:
 @dataclass
 class VoiceConfig:
     model_path: str = "models/en_US-ryan-medium.onnx"
-    length_scale: float = 1.15
-    pitch_semitones: float = -1.0
-    preset: str = "game-accurate"
+    length_scale: float = 1.22
+    pitch_semitones: float = 0.0  # WORLD quantization handles pitch in game-accurate-v2
+    preset: str = "game-accurate-v2"
 
 
 @dataclass
