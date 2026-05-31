@@ -21,10 +21,14 @@ thereafter). An optional `config.toml` in `%APPDATA%\CyclopsVoice\` overrides an
 
 ## How it works
 
-One background daemon owns a warm Piper voice model and the Cyclops DSP chain. Three surfaces
-drive it:
+One background daemon owns a warm Piper voice model and the Cyclops DSP chain. Several
+surfaces drive it:
 
 - **Global hotkey** — select text in any app, press `Ctrl+Alt+R`
+- **Double right-click** — read the sentence (or paragraph) under the cursor, no selection
+  needed (via Windows UI Automation; works in browsers and most native apps)
+- **Settings GUI** — a native window (tray → **Settings…**) to tune voice, effects, hotkeys,
+  the read gesture, and app behavior, applied live with no restart
 - **CLI / scripts** — `cyclops say "Hull integrity stable."`
 - **MCP server** — Claude Desktop calls the `speak` tool directly
 
@@ -59,6 +63,9 @@ copy config.example.toml "$env:APPDATA\CyclopsVoice\config.toml"
 # Start the background service (hotkey + tray + API, port 7788)
 cyclops daemon
 
+# Open the settings window (also on the tray menu as "Settings…")
+cyclops gui
+
 # Speak text
 cyclops say "All systems online."
 echo "Multi-line text" | cyclops say -
@@ -81,9 +88,12 @@ cyclops install-model
 cyclops install-autostart
 ```
 
-**Hotkeys** (configurable in `config.toml`):
+**Hotkeys** (configurable in the GUI or `config.toml`):
 - `Ctrl+Alt+R` — read current selection from any app
 - `Ctrl+Alt+S` — stop
+- `Ctrl+Alt+P` — pause / resume
+- **Double right-click** — read the sentence/paragraph under the cursor (configurable;
+  defaults to a context-menu auto-dismiss)
 
 **Presets:**
 
@@ -106,7 +116,9 @@ httpx.post("http://127.0.0.1:7788/speak", json={"text": "Dive, dive, dive."})
 httpx.post("http://127.0.0.1:7788/render", json={"text": "Hull integrity stable."})
 ```
 
-Full API: `GET /health /status /presets` · `POST /speak /stop /pause /resume /skip /render`
+Full API: `GET /health /status /presets /config /audio/devices` ·
+`POST /speak /stop /pause /resume /skip /render /config /autostart`. The settings GUI is
+served at `GET /ui/` and live-applies edits through `POST /config`.
 
 Optional token auth: set `auth_token` in config, then send `X-Cyclops-Token: <token>`.
 
@@ -139,7 +151,7 @@ The daemon must be running first. Available tools: `speak(text, preset?)`, `stop
 
 ```powershell
 .\.venv\Scripts\python -m pytest -q
-# 37 passed — includes acoustic golden test that verifies the DSP output
+# 64 passed — includes acoustic golden test that verifies the DSP output
 # matches the measured Cyclops voice profile (low-mid dominance, treble rolloff, stereo width)
 ```
 
@@ -169,11 +181,31 @@ length_scale = 1.22       # >1 = slower / more deliberate
 pitch_semitones = 0.0     # register handled by WORLD in the default preset
 preset = "game-accurate-v2"
 
+[voice.effects]            # high-level overrides layered on the preset (omit = use preset)
+# reverb_wet = 0.24
+# rasp_amount = 0.10
+# drive_db = 4.0
+# presence_gain_db = 3.0
+
 [hotkeys]
 read_selection = "ctrl+alt+r"
 stop = "ctrl+alt+s"
+pause_resume = "ctrl+alt+p"
+
+[read]                     # double-right-click read-under-cursor
+trigger = "double_rmb"     # double_rmb | modifier_rmb | off
+modifier = "ctrl"          # used when trigger = modifier_rmb
+mode = "sentence"          # sentence | paragraph
+auto_dismiss_menu = true   # send Esc to close the context menu after grabbing text
+max_chars = 0              # 0 = unlimited
 
 [audio]
 output_device = ""        # empty = system default
 sample_rate = 0           # 0 = use model's native rate
+volume = 1.0              # master output gain
+
+[behavior]
+launch_on_login = false
+start_minimized = true
+read_dispatch = "interrupt"  # interrupt | enqueue — for hotkey/right-click reads
 ```

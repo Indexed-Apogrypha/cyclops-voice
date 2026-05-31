@@ -18,11 +18,16 @@ ENTRY = os.path.join(ROOT, "packaging", "entry.py")
 datas, binaries, hiddenimports = [], [], []
 
 # piper carries espeak-ng-data, espeakbridge.pyd, tashkeel in-package.
-for pkg in ("piper", "onnxruntime", "sounddevice", "pedalboard", "pyworld"):
+# webview/pythonnet/comtypes carry the EdgeChromium backend + UIA COM plumbing.
+for pkg in ("piper", "onnxruntime", "sounddevice", "pedalboard", "pyworld",
+            "webview", "clr_loader", "comtypes"):
     d, b, h = collect_all(pkg)
     datas += d
     binaries += b
     hiddenimports += h
+
+# The settings GUI's static assets (HTML/CSS/JS), served by the daemon at /ui/.
+datas += [(os.path.join(SRC, "cyclops_voice", "web"), "cyclops_voice/web")]
 
 # Prune espeak data to English-only: drop the large non-English pronunciation
 # dictionaries and the Arabic tashkeel model (~13 MB+ total) we never use.
@@ -44,6 +49,10 @@ hiddenimports += [
     "uvicorn.protocols.websockets.auto", "uvicorn.lifespan.on",
     "pystray._win32", "PIL.Image", "pynput.keyboard._win32", "pynput.mouse._win32",
     "mcp", "cyclops_voice.pitch_quantize", "cyclops_voice.texture",
+    # settings GUI + read-under-cursor
+    "cyclops_voice.gui", "cyclops_voice.mouse_trigger",
+    "cyclops_voice.text_under_cursor", "cyclops_voice.autostart",
+    "webview.platforms.edgechromium", "clr", "fastapi.staticfiles",
 ]
 
 a = Analysis(

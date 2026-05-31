@@ -17,6 +17,12 @@ models/
 temp.wav
 output.wav
 
+# Logs (incl. daemon debug logs)
+*.log
+
+# Superpowers brainstorm/session state (machine-specific)
+.superpowers/
+
 # Compiled binaries / downloaded executables
 *.exe
 

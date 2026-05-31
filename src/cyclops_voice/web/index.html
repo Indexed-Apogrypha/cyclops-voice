@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cyclops Voice — Settings</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="eye"></div>
+    <h1>Cyclops Voice</h1>
+    <span id="status" class="status">connecting…</span>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab active" data-tab="voice">Voice</button>
+    <button class="tab" data-tab="read">Read</button>
+    <button class="tab" data-tab="hotkeys">Hotkeys</button>
+    <button class="tab" data-tab="behavior">Behavior</button>
+    <button class="tab" data-tab="advanced">Advanced</button>
+  </nav>
+
+  <main>
+
+    <!-- VOICE -->
+    <section class="panel active" data-panel="voice">
+      <div class="group">
+        <div class="group-title">Voice</div>
+        <div class="row">
+          <label>Preset</label>
+          <select id="voice.preset"></select>
+        </div>
+        <div class="row">
+          <label>Speed <small>higher = slower</small></label>
+          <input type="range" id="voice.length_scale" min="0.8" max="1.6" step="0.01">
+          <output id="voice.length_scale.out"></output>
+        </div>
+        <div class="row">
+          <label>Pitch <small>semitones</small></label>
+          <input type="range" id="voice.pitch_semitones" min="-6" max="6" step="0.5">
+          <output id="voice.pitch_semitones.out"></output>
+        </div>
+        <p class="note">Pitch has limited effect on the <em>game-accurate-v2</em> preset —
+          its register comes from WORLD pitch quantization, not the pitch slider.</p>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Effects <small>check to override the preset value</small></div>
+        <div class="effect" data-fx="reverb_wet" data-min="0" data-max="0.6" data-step="0.01">
+          <label class="effect-label"><input type="checkbox" class="fx-on"> Reverb</label>
+          <input type="range" class="fx-val"><output></output>
+        </div>
+        <div class="effect" data-fx="rasp_amount" data-min="0" data-max="0.3" data-step="0.01">
+          <label class="effect-label"><input type="checkbox" class="fx-on"> Rasp / grain</label>
+          <input type="range" class="fx-val"><output></output>
+        </div>
+        <div class="effect" data-fx="drive_db" data-min="0" data-max="12" data-step="0.5">
+          <label class="effect-label"><input type="checkbox" class="fx-on"> Drive</label>
+          <input type="range" class="fx-val"><output></output>
+        </div>
+        <div class="effect" data-fx="presence_gain_db" data-min="0" data-max="8" data-step="0.5">
+          <label class="effect-label"><input type="checkbox" class="fx-on"> Presence</label>
+          <input type="range" class="fx-val"><output></output>
+        </div>
+        <div class="preview">
+          <button id="preview">▶ Preview voice</button>
+          <button id="stop" class="secondary">■ Stop</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- READ -->
+    <section class="panel" data-panel="read">
+      <div class="group">
+        <div class="group-title">Trigger</div>
+        <div class="row">
+          <label>Gesture</label>
+          <select id="read.trigger">
+            <option value="double_rmb">Double right-click</option>
+            <option value="modifier_rmb">Modifier + right-click</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+        <div class="row" id="modifier-row">
+          <label>Modifier key</label>
+          <select id="read.modifier">
+            <option value="none">None</option>
+            <option value="ctrl">Ctrl</option>
+            <option value="alt">Alt</option>
+            <option value="shift">Shift</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Read unit</label>
+          <div class="radios">
+            <label><input type="radio" name="read.mode" value="sentence"> Sentence</label>
+            <label><input type="radio" name="read.mode" value="paragraph"> Paragraph</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Options</div>
+        <div class="row">
+          <label>Auto-dismiss context menu</label>
+          <input type="checkbox" id="read.auto_dismiss_menu">
+        </div>
+        <div class="row">
+          <label>Max characters <small>0 = no limit</small></label>
+          <input type="number" id="read.max_chars" min="0" step="50">
+        </div>
+        <p class="note">Uses Windows UI Automation to read text under the cursor. Works in
+          browsers and most native apps; silently does nothing where text isn't accessible.</p>
+      </div>
+    </section>
+
+    <!-- HOTKEYS -->
+    <section class="panel" data-panel="hotkeys">
+      <div class="group">
+        <div class="group-title">Hotkeys</div>
+        <div class="row">
+          <label>Read selection</label>
+          <input type="text" id="hotkeys.read_selection">
+        </div>
+        <div class="row">
+          <label>Stop</label>
+          <input type="text" id="hotkeys.stop">
+        </div>
+        <div class="row">
+          <label>Pause / resume</label>
+          <input type="text" id="hotkeys.pause_resume">
+        </div>
+        <p class="note">Format: <code>ctrl+alt+r</code>. Changes re-bind immediately — no restart needed.</p>
+      </div>
+    </section>
+
+    <!-- BEHAVIOR -->
+    <section class="panel" data-panel="behavior">
+      <div class="group">
+        <div class="group-title">Application</div>
+        <div class="row">
+          <label>Launch on Windows login</label>
+          <input type="checkbox" id="behavior.launch_on_login">
+        </div>
+        <div class="row">
+          <label>Start minimized to tray</label>
+          <input type="checkbox" id="behavior.start_minimized">
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-title">Playback</div>
+        <div class="row">
+          <label>New read while speaking</label>
+          <select id="behavior.read_dispatch">
+            <option value="interrupt">Interrupt and read</option>
+            <option value="enqueue">Add to queue</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Master volume</label>
+          <input type="range" id="audio.volume" min="0" max="1" step="0.01">
+          <output id="audio.volume.out"></output>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADVANCED -->
+    <section class="panel" data-panel="advanced">
+      <div class="group">
+        <div class="group-title">Audio Output</div>
+        <div class="row">
+          <label>Output device</label>
+          <select id="audio.output_device"></select>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-title">Service</div>
+        <div class="row">
+          <label>Host</label>
+          <input type="text" id="service.host">
+        </div>
+        <div class="row">
+          <label>Port</label>
+          <input type="number" id="service.port">
+        </div>
+        <div class="row">
+          <label>Auth token</label>
+          <input type="text" id="service.auth_token" placeholder="optional">
+        </div>
+        <p class="note">The local HTTP server the GUI, CLI, and MCP tools connect to
+          (<code>127.0.0.1:7788</code> by default). Change host/port only if running the
+          daemon on a non-default address, or add a token to require authentication from
+          remote callers. <strong>Changes apply on the next daemon restart.</strong></p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer><span id="saved" class="saved"></span></footer>
+  <script src="app.js"></script>
+</body>
+</html>

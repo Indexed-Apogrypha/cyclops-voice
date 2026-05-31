@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--no-hotkey", action="store_true")
     d.add_argument("--no-tray", action="store_true")
 
+    sub.add_parser("gui", help="open the settings window")
     sub.add_parser("install-model", help="download the en_US-ryan voice model")
     sub.add_parser("install-autostart", help="add a Startup-folder shortcut")
 
@@ -42,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
         run_daemon(args.config, enable_hotkey=not args.no_hotkey,
                    enable_tray=not args.no_tray)
         return 0
+    if args.cmd == "gui":
+        from .gui import run_gui
+        return run_gui(load_config(args.config))
     if args.cmd == "install-model":
         from .model_download import main as m; return m()
     if args.cmd == "install-autostart":

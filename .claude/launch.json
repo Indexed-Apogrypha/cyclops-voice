@@ -14,6 +14,12 @@
       "port": 7788
     }
   ,{
+      "name": "web-preview",
+      "runtimeExecutable": ".venv/Scripts/python",
+      "runtimeArgs": ["-m", "http.server", "7791", "--directory", "src/cyclops_voice/web"],
+      "port": 7791
+    }
+  ,{
       "name": "tuning-preview",
       "runtimeExecutable": ".venv/Scripts/python",
       "runtimeArgs": ["-m", "http.server", "7790", "--directory", "tuning/preview"],

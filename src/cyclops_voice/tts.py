@@ -20,6 +20,11 @@ class PiperTTS:
         self.sample_rate = int(getattr(self._voice.config, "sample_rate", 22050))
         self._syn_config = SynthesisConfig(length_scale=length_scale)
 
+    def set_length_scale(self, length_scale: float) -> None:
+        """Live speed change: rebuild the synthesis config (no model reload)."""
+        self.length_scale = length_scale
+        self._syn_config = SynthesisConfig(length_scale=length_scale)
+
     def synth(self, text: str) -> np.ndarray:
         """Synthesize text to mono float32 PCM in [-1, 1]."""
         text = text.strip()

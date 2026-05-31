@@ -1,6 +1,6 @@
 from __future__ import annotations
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
 
 from .paths import default_model_path, default_config_path
@@ -67,6 +67,48 @@ PRESETS: dict[str, Preset] = {
 }
 
 
+_extra_presets: dict[str, Preset] = {}
+
+
+def register_preset(name: str, preset: Preset) -> None:
+    _extra_presets[name] = preset
+
+
+def all_presets() -> dict[str, Preset]:
+    return {**PRESETS, **_extra_presets}
+
+
+def load_tuning_candidates(tuning_dir: Path) -> int:
+    """Scan tuning_dir/param_sets_*.json and register each candidate as a Preset.
+
+    Each entry starts from its declared base preset then applies only the fields
+    present in the JSON, so older param_sets files (missing pitch_quantize etc.)
+    inherit the base preset's defaults for those newer fields.
+    Returns the number of newly registered presets (0 if dir absent or files empty).
+    """
+    import json as _json
+    valid = {f.name for f in fields(Preset)} - {"name"}
+    count = 0
+    for path in sorted(tuning_dir.glob("param_sets_*.json")):
+        try:
+            entries = _json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for entry in entries:
+            cid = entry.get("candidate_id")
+            if not cid or cid in PRESETS or cid in _extra_presets:
+                continue
+            raw = entry.get("preset", {})
+            base = PRESETS.get(raw.get("name", "game-accurate"), PRESETS["game-accurate"])
+            overrides = {k: v for k, v in raw.items() if k in valid}
+            try:
+                register_preset(cid, replace(base, name=cid, **overrides))
+                count += 1
+            except Exception:
+                pass
+    return count
+
+
 @dataclass
 class ServiceConfig:
     host: str = "127.0.0.1"
@@ -75,23 +117,56 @@ class ServiceConfig:
 
 
 @dataclass
+class EffectsConfig:
+    """High-level effect overrides layered on top of the base preset.
+
+    Each None field falls through to the preset's own value (see
+    build_effective_preset). The GUI's effect sliders write here.
+    """
+    reverb_wet: float | None = None
+    rasp_amount: float | None = None
+    drive_db: float | None = None
+    presence_gain_db: float | None = None
+
+
+@dataclass
 class VoiceConfig:
     model_path: str = field(default_factory=default_model_path)
     length_scale: float = 1.22
     pitch_semitones: float = 0.0  # WORLD quantization handles pitch in game-accurate-v2
     preset: str = "game-accurate-v2"
+    effects: EffectsConfig = field(default_factory=EffectsConfig)
 
 
 @dataclass
 class HotkeyConfig:
     read_selection: str = "ctrl+alt+r"
     stop: str = "ctrl+alt+s"
+    pause_resume: str = "ctrl+alt+p"
 
 
 @dataclass
 class AudioConfig:
     output_device: str = ""
     sample_rate: int = 0  # 0 = use model rate
+    volume: float = 1.0   # master output gain applied in the player (0..1+)
+
+
+@dataclass
+class ReadConfig:
+    """The double-right-click read-under-cursor feature."""
+    trigger: str = "double_rmb"      # double_rmb | modifier_rmb | off
+    modifier: str = "none"           # none | ctrl | alt | shift (only used when trigger=modifier_rmb)
+    mode: str = "paragraph"          # sentence | paragraph (UIA text unit)
+    auto_dismiss_menu: bool = True   # send Esc to close the context menu after grabbing text
+    max_chars: int = 0               # 0 = unlimited; otherwise ignore reads longer than this
+
+
+@dataclass
+class BehaviorConfig:
+    launch_on_login: bool = False
+    start_minimized: bool = True
+    read_dispatch: str = "interrupt"  # interrupt | enqueue — default mode for hotkey/right-click reads
 
 
 @dataclass
@@ -100,11 +175,13 @@ class CyclopsConfig:
     voice: VoiceConfig = field(default_factory=VoiceConfig)
     hotkeys: HotkeyConfig = field(default_factory=HotkeyConfig)
     audio: AudioConfig = field(default_factory=AudioConfig)
+    read: ReadConfig = field(default_factory=ReadConfig)
+    behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
 
 
 def _apply(section: dict, obj):
     for k, v in section.items():
-        if hasattr(obj, k):
+        if hasattr(obj, k) and not is_dataclass(getattr(obj, k)):
             setattr(obj, k, v)
 
 
@@ -120,14 +197,85 @@ def load_config(path: Path | str | None = None) -> CyclopsConfig:
     if not path.exists():
         return cfg
     data = tomllib.loads(path.read_text(encoding="utf-8"))
+    voice = data.get("voice", {})
     _apply(data.get("service", {}), cfg.service)
-    _apply(data.get("voice", {}), cfg.voice)
+    _apply(voice, cfg.voice)
+    _apply(voice.get("effects", {}), cfg.voice.effects)
     _apply(data.get("hotkeys", {}), cfg.hotkeys)
     _apply(data.get("audio", {}), cfg.audio)
+    _apply(data.get("read", {}), cfg.read)
+    _apply(data.get("behavior", {}), cfg.behavior)
+    return cfg
+
+
+def _toml_value(v) -> str:
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, str):
+        return "'" + v.replace("'", "\\'") + "'"
+    return repr(v)
+
+
+def save_config(cfg: CyclopsConfig, path: Path | str | None = None) -> Path:
+    """Persist config to TOML (per-user config path by default). None override
+    fields are omitted so the preset value keeps showing through."""
+    path = Path(path) if path is not None else default_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines: list[str] = []
+
+    def emit(header: str, obj) -> None:
+        body = [f"{f.name} = {_toml_value(getattr(obj, f.name))}"
+                for f in fields(obj)
+                if not is_dataclass(getattr(obj, f.name)) and getattr(obj, f.name) is not None]
+        if body:
+            lines.append(f"[{header}]")
+            lines.extend(body)
+            lines.append("")
+
+    emit("service", cfg.service)
+    emit("voice", cfg.voice)
+    emit("voice.effects", cfg.voice.effects)
+    emit("hotkeys", cfg.hotkeys)
+    emit("audio", cfg.audio)
+    emit("read", cfg.read)
+    emit("behavior", cfg.behavior)
+    path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    return path
+
+
+def to_dict(cfg: CyclopsConfig) -> dict:
+    """Full config as nested JSON-friendly dict (for the GUI's GET /config)."""
+    return asdict(cfg)
+
+
+def from_dict(data: dict) -> CyclopsConfig:
+    """Build a config from a (possibly partial) nested dict, falling back to
+    defaults for anything omitted. Mirrors load_config's section handling."""
+    cfg = CyclopsConfig()
+    voice = data.get("voice", {})
+    _apply(data.get("service", {}), cfg.service)
+    _apply(voice, cfg.voice)
+    _apply(voice.get("effects", {}), cfg.voice.effects)
+    _apply(data.get("hotkeys", {}), cfg.hotkeys)
+    _apply(data.get("audio", {}), cfg.audio)
+    _apply(data.get("read", {}), cfg.read)
+    _apply(data.get("behavior", {}), cfg.behavior)
     return cfg
 
 
 def resolve_preset(name: str) -> Preset:
+    if name in _extra_presets:
+        return _extra_presets[name]
     if name not in PRESETS:
-        raise KeyError(f"unknown preset {name!r}; choices: {sorted(PRESETS)}")
+        raise KeyError(f"unknown preset {name!r}; choices: {sorted(all_presets())}")
     return PRESETS[name]
+
+
+def build_effective_preset(cfg: CyclopsConfig) -> Preset:
+    """Base preset with the GUI's effect overrides layered on top. Never
+    mutates PRESETS — returns a fresh Preset via dataclasses.replace."""
+    base = resolve_preset(cfg.voice.preset)
+    overrides = {f.name: getattr(cfg.voice.effects, f.name)
+                 for f in fields(cfg.voice.effects)
+                 if getattr(cfg.voice.effects, f.name) is not None}
+    return replace(base, **overrides) if overrides else base

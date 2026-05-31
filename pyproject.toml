@@ -22,6 +22,9 @@ dependencies = [
   "pystray>=0.19",
   "Pillow>=10",
   "mcp>=1.2",
+  "pywebview>=5",          # native settings window
+  "pythonnet>=3.0",        # pywebview EdgeChromium (WebView2) backend on Windows
+  "comtypes>=1.4",         # UI Automation for read-under-cursor
 ]
 
 [project.optional-dependencies]
@@ -33,6 +36,9 @@ cyclops = "cyclops_voice.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+cyclops_voice = ["web/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

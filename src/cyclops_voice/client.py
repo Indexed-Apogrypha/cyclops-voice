@@ -36,3 +36,17 @@ class CyclopsClient:
                path: str | None = None) -> dict:
         r = self._c.post("/render", json={"text": text, "preset": preset, "path": path})
         r.raise_for_status(); return r.json()
+
+    def get_config(self) -> dict:
+        r = self._c.get("/config"); r.raise_for_status(); return r.json()
+
+    def set_config(self, cfg: dict) -> dict:
+        r = self._c.post("/config", json=cfg); r.raise_for_status(); return r.json()
+
+    def audio_devices(self) -> list[dict]:
+        r = self._c.get("/audio/devices"); r.raise_for_status()
+        return r.json().get("devices", [])
+
+    def set_autostart(self, enabled: bool) -> dict:
+        r = self._c.post("/autostart", json={"enabled": enabled})
+        r.raise_for_status(); return r.json()

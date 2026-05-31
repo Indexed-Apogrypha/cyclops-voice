@@ -1,30 +1,14 @@
-"""Create a Startup-folder shortcut that launches the daemon with pythonw (no console)."""
+"""Create a Startup-folder shortcut that launches the daemon on login.
+
+Thin CLI wrapper around cyclops_voice.autostart (the single source of truth, also
+used by the GUI's 'Launch on login' toggle)."""
 from __future__ import annotations
-import os
-import sys
-from pathlib import Path
+
+from cyclops_voice.autostart import enable
 
 
 def main() -> int:
-    startup = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs/Startup"
-    startup.mkdir(parents=True, exist_ok=True)
-    venv = Path(sys.prefix)
-    pythonw = venv / "Scripts" / "pythonw.exe"
-    target = pythonw if pythonw.exists() else Path(sys.executable)
-    workdir = Path.cwd()
-    lnk = startup / "CyclopsVoice.lnk"
-
-    ps = f'''
-$ws = New-Object -ComObject WScript.Shell
-$s = $ws.CreateShortcut("{lnk}")
-$s.TargetPath = "{target}"
-$s.Arguments = "-m cyclops_voice.cli daemon"
-$s.WorkingDirectory = "{workdir}"
-$s.WindowStyle = 7
-$s.Save()
-'''
-    import subprocess
-    subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=True)
+    lnk = enable()
     print(f"created {lnk}")
     return 0
 

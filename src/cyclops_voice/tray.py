@@ -1,4 +1,6 @@
 from __future__ import annotations
+import subprocess
+import sys
 from .client import CyclopsClient
 from .config import CyclopsConfig
 
@@ -23,9 +25,19 @@ def run_tray(cfg: CyclopsConfig) -> None:
             except Exception: pass
         return w
 
+    def _open_settings():
+        # GUI runs in its own process (pywebview wants the main thread, which the tray owns).
+        cmd = [sys.executable, "gui"] if getattr(sys, "frozen", False) \
+            else [sys.executable, "-m", "cyclops_voice.cli", "gui"]
+        try:
+            subprocess.Popen(cmd, creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+        except Exception:
+            pass
+
     icon = pystray.Icon(
         "cyclops", _icon_image(), "Cyclops Voice",
         menu=pystray.Menu(
+            pystray.MenuItem("Settings…", _safe(_open_settings), default=True),
             pystray.MenuItem("Stop", _safe(client.stop)),
             pystray.MenuItem("Pause", _safe(client.pause)),
             pystray.MenuItem("Resume", _safe(client.resume)),

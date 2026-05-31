@@ -46,3 +46,19 @@ def test_skip_moves_to_idle_when_queue_empty():
     p.skip()
     p.wait_idle(timeout=5)
     assert p.state == "idle"
+
+def test_set_gain_scales_output():
+    sink = FakeSink()
+    p = Player(sample_rate=22050, sink=sink, gain=0.5)
+    p.submit("jobg", (b for b in [np.ones((1024, 2), dtype=np.float32)]))
+    p.wait_idle(timeout=5)
+    assert sink.frames and np.allclose(sink.frames[0], 0.5)
+
+def test_set_sink_swaps_output():
+    a, b = FakeSink(), FakeSink()
+    p = Player(sample_rate=22050, sink=a)
+    p.set_sink(b)
+    p.submit("jobs", _buffers(n_buffers=2))
+    p.wait_idle(timeout=5)
+    assert sum(len(f) for f in b.frames) > 0
+    assert a.frames == []  # nothing went to the old sink after swap

@@ -10,6 +10,17 @@ class AudioSink(Protocol):
     def close(self) -> None: ...
 
 
+def list_output_devices() -> list[dict]:
+    """Output-capable audio devices for the GUI device picker. Empty on failure."""
+    try:
+        import sounddevice as sd
+        return [{"index": i, "name": d["name"]}
+                for i, d in enumerate(sd.query_devices())
+                if d.get("max_output_channels", 0) > 0]
+    except Exception:
+        return []
+
+
 class SoundDeviceSink:
     def __init__(self, sample_rate: int, device: str | int | None = None):
         import sounddevice as sd
@@ -31,9 +42,10 @@ class Player:
     """Streams PCM buffers for one job at a time with pause/stop/skip control."""
     BLOCK = 1024  # frames per sink write
 
-    def __init__(self, sample_rate: int, sink: AudioSink):
+    def __init__(self, sample_rate: int, sink: AudioSink, gain: float = 1.0):
         self.sample_rate = sample_rate
         self._sink = sink
+        self._gain = float(gain)
         self._jobs: "queue.Queue[tuple[str, Iterator[np.ndarray]]]" = queue.Queue()
         self._state = "idle"
         self._lock = threading.Lock()
@@ -74,6 +86,17 @@ class Player:
     def skip(self) -> None:
         self._skip.set()
 
+    def set_gain(self, gain: float) -> None:
+        with self._lock:
+            self._gain = float(gain)
+
+    def set_sink(self, sink: AudioSink) -> None:
+        """Hot-swap the output sink (used for live audio-device changes). Stops
+        any current playback first; closing the old sink is the caller's job."""
+        self.stop()
+        with self._lock:
+            self._sink = sink
+
     def wait_idle(self, timeout: float | None = None) -> bool:
         return self._idle.wait(timeout)
 
@@ -103,4 +126,7 @@ class Player:
                     self._set("paused")
                     threading.Event().wait(0.05)
                 self._set("speaking")
-                self._sink.write(buf[i:i + self.BLOCK])
+                with self._lock:
+                    gain = self._gain
+                block = buf[i:i + self.BLOCK]
+                self._sink.write(block * gain if gain != 1.0 else block)
