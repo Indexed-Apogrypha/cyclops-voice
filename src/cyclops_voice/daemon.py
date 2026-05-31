@@ -10,6 +10,10 @@ from .server import create_app
 
 
 def build_engine(cfg: CyclopsConfig) -> SpeechEngine:
+    if not Path(cfg.voice.model_path).exists():
+        from .model_download import ensure_model
+        print(f"Voice model not found; downloading to {cfg.voice.model_path} ...")
+        ensure_model(cfg.voice.model_path)
     tts = PiperTTS(cfg.voice.model_path, length_scale=cfg.voice.length_scale)
     return SpeechEngine(tts=tts, config=cfg)
 

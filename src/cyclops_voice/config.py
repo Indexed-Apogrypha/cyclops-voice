@@ -3,6 +3,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .paths import default_model_path, default_config_path
+
 
 @dataclass(frozen=True)
 class Preset:
@@ -74,7 +76,7 @@ class ServiceConfig:
 
 @dataclass
 class VoiceConfig:
-    model_path: str = "models/en_US-ryan-medium.onnx"
+    model_path: str = field(default_factory=default_model_path)
     length_scale: float = 1.22
     pitch_semitones: float = 0.0  # WORLD quantization handles pitch in game-accurate-v2
     preset: str = "game-accurate-v2"
@@ -109,7 +111,11 @@ def _apply(section: dict, obj):
 def load_config(path: Path | str | None = None) -> CyclopsConfig:
     cfg = CyclopsConfig()
     if path is None:
-        return cfg
+        # No explicit path: auto-load the per-user config if a shared user dropped one.
+        user_cfg = default_config_path()
+        if not user_cfg.exists():
+            return cfg
+        path = user_cfg
     path = Path(path)
     if not path.exists():
         return cfg
